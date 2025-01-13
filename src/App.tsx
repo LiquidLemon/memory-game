@@ -41,84 +41,82 @@ function App() {
     setWrongSquareIndex(null);
   };
 
-  const rows = [];
-  for (let y = 0; y < SIZE; y++) {
-    const row = [];
-    for (let x = 0; x < SIZE; x++) {
-      const i = y * SIZE + x;
-      const [number, isSelected] = numbers[i];
-      row.push(
-        <td
-          key={i}
-          style={{
-            width: "50px",
-            height: "50px",
-            backgroundColor:
-              i === wrongSquareIndex
-                ? "#ffcdd2"
+  const generateRows = () => {
+    const rows = [];
+    for (let y = 0; y < SIZE; y++) {
+      const row = [];
+      for (let x = 0; x < SIZE; x++) {
+        const i = y * SIZE + x;
+        const [number, isSelected] = numbers[i];
+        row.push(
+          <td
+            key={i}
+            style={{
+              width: "50px",
+              height: "50px",
+              backgroundColor:
+                i === wrongSquareIndex
+                  ? "#ffcdd2"
+                  : isSelected
+                  ? "#90EE90"
+                  : "#f5f5f5",
+              cursor: isGameOver
+                ? "default"
                 : isSelected
-                ? "#90EE90"
-                : "#f5f5f5",
-            cursor: isGameOver ? "default" : isSelected ? "default" : "pointer",
-            borderRadius: "4px",
-            margin: "4px",
-            textAlign: "center",
-            fontWeight: "500",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-            transition: "background-color 0.2s ease",
-          }}
-          onClick={() => {
-            if (isGameOver) return;
+                ? "default"
+                : "pointer",
+              borderRadius: "4px",
+              margin: "4px",
+              textAlign: "center",
+              fontWeight: "500",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+              transition: "background-color 0.2s ease",
+            }}
+            onClick={() => {
+              if (isGameOver) return;
 
-            if (startTime === null) {
-              setStartTime(Date.now());
-            }
+              if (startTime === null) {
+                setStartTime(Date.now());
+              }
 
-            if (number !== nextNumber) {
-              setIsGameOver(true);
-              setEndTime(Date.now());
-              setWrongSquareIndex(i);
-              return;
-            }
+              if (number !== nextNumber) {
+                setIsGameOver(true);
+                setEndTime(Date.now());
+                setWrongSquareIndex(i);
+                return;
+              }
 
-            const newNextNumber = nextNumber + 1;
-            setNumbers(
-              numbers.map(([number, isSelected], index) => [
-                number,
-                index === i ? true : isSelected,
-              ])
-            );
-            setNextNumber(newNextNumber);
+              const newNextNumber = nextNumber + 1;
+              setNumbers(
+                numbers.map(([number, isSelected], index) => [
+                  number,
+                  index === i ? true : isSelected,
+                ])
+              );
+              setNextNumber(newNextNumber);
 
-            if (newNextNumber > SIZE * SIZE) {
-              setEndTime(Date.now());
-            }
-          }}
-        >
-          {number}
-        </td>
+              if (newNextNumber > SIZE * SIZE) {
+                setEndTime(Date.now());
+              }
+            }}
+          >
+            {number}
+          </td>
+        );
+      }
+      rows.push(
+        <tr key={y} style={{ padding: "2px" }}>
+          {row}
+        </tr>
       );
     }
-    rows.push(
-      <tr key={y} style={{ padding: "2px" }}>
-        {row}
-      </tr>
-    );
-  }
+    return rows;
+  };
 
   const getTimeString = () => {
     if (!startTime || !endTime) return "";
-    const totalSeconds = (endTime - startTime) / 1000;
-
-    if (totalSeconds < 60) {
-      return `Time: ${totalSeconds.toFixed(1)} seconds`;
-    }
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = (totalSeconds % 60).toFixed(1);
-    return `Time: ${minutes} minute${
-      minutes !== 1 ? "s" : ""
-    } ${seconds} seconds`;
+    const seconds = ((endTime - startTime) / 1000).toFixed(1);
+    return `Time: ${seconds} seconds`;
   };
 
   return (
@@ -158,7 +156,7 @@ function App() {
         )}
       </div>
       <table style={{ borderCollapse: "separate", borderSpacing: "4px" }}>
-        <tbody>{rows}</tbody>
+        <tbody>{generateRows()}</tbody>
       </table>
     </div>
   );
