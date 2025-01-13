@@ -302,12 +302,14 @@ function GameBoard({
     if (!actualSize || numbers.length !== actualSize * actualSize) return [];
 
     // Update viewport width calculation
-    const padding = 32; // Page padding (16px * 2)
-    const spacing = 8; // Total spacing between cells (4px * 2)
-    const maxWidth = 500; // Maximum width of the game board
-    const viewportWidth = Math.min(window.innerWidth - padding, maxWidth);
+    const minPadding = 8; // Minimal padding for mobile
+    const spacing = 8;
+    const viewportWidth = window.innerWidth;
+    const isMobile = viewportWidth < 600;
+    const effectivePadding = isMobile ? minPadding * 2 : 32;
+    const maxWidth = Math.min(viewportWidth - effectivePadding, 600);
     const totalSpacing = spacing * (actualSize - 1);
-    const cellSize = Math.floor((viewportWidth - totalSpacing) / actualSize);
+    const cellSize = Math.floor((maxWidth - totalSpacing) / actualSize);
 
     for (let y = 0; y < actualSize; y++) {
       const row = [];
@@ -365,17 +367,20 @@ function GameBoard({
   return (
     <div
       style={{
-        overflowX: "auto",
-        maxWidth: "100%",
-        padding: "0 8px", // Add some padding
-        boxSizing: "border-box", // Ensure padding is included in width
+        overflowX: "hidden",
+        width: "100%",
+        maxWidth: "600px",
+        margin: "0 auto",
+        padding: window.innerWidth < 600 ? "0 4px" : "0", // Minimal padding on mobile
+        boxSizing: "border-box",
       }}
     >
       <table
         style={{
           borderCollapse: "separate",
           borderSpacing: "4px",
-          margin: "0 auto", // Center the table
+          margin: "0 auto",
+          width: "100%",
         }}
       >
         <tbody>{generateRows()}</tbody>
@@ -481,65 +486,84 @@ function App() {
         flexDirection: "column",
         alignItems: "center",
         gap: "20px",
-        padding: "2rem",
+        padding: "1rem",
       }}
     >
-      <h1
+      <div
         style={{
-          fontSize: "2.5rem",
-          marginBottom: "1rem",
-          background: "linear-gradient(45deg, #646cff, #9089fc)",
-          backgroundClip: "text",
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-          textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          width: "100%",
+          maxWidth: "600px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
         }}
       >
-        Number Memory Game
-      </h1>
-      <GameControls
-        size={size}
-        isBlindMode={isBlindMode}
-        isHardMode={isHardMode}
-        onSizeChange={(newSize) => {
-          setSize(newSize);
-          resetGame(newSize);
+        <h1
+          style={{
+            fontSize: "2.5rem",
+            marginBottom: "1rem",
+            background: "linear-gradient(45deg, #646cff, #9089fc)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          Number Memory Game
+        </h1>
+        <GameControls
+          size={size}
+          isBlindMode={isBlindMode}
+          isHardMode={isHardMode}
+          onSizeChange={(newSize) => {
+            setSize(newSize);
+            resetGame(newSize);
+          }}
+          onBlindModeChange={(newBlindMode) => {
+            setIsBlindMode(newBlindMode);
+            resetGame(undefined, newBlindMode);
+          }}
+          onHardModeChange={(newHardMode) => {
+            setIsHardMode(newHardMode);
+            setNumbers(createInitialArray(size, newHardMode));
+            setIsComplete(false);
+            setIsGameOver(false);
+            setStartTime(null);
+            setEndTime(null);
+            setWrongSquareIndex(null);
+            setCorrectNumber(null);
+          }}
+        />
+        <GameStatus
+          isComplete={isComplete}
+          isGameOver={isGameOver}
+          isBoardHidden={isBoardHidden}
+          isHardMode={isHardMode}
+          getTimeString={getTimeString}
+          onReset={() => resetGame()}
+          onStartGame={() => {
+            setIsBoardHidden(false);
+            setStartTime(Date.now());
+          }}
+        />
+      </div>
+      <div
+        style={{
+          width: "100vw",
+          display: "flex",
+          justifyContent: "center",
+          margin: "0 -1rem",
         }}
-        onBlindModeChange={(newBlindMode) => {
-          setIsBlindMode(newBlindMode);
-          resetGame(undefined, newBlindMode);
-        }}
-        onHardModeChange={(newHardMode) => {
-          setIsHardMode(newHardMode);
-          setNumbers(createInitialArray(size, newHardMode));
-          setIsComplete(false);
-          setIsGameOver(false);
-          setStartTime(null);
-          setEndTime(null);
-          setWrongSquareIndex(null);
-          setCorrectNumber(null);
-        }}
-      />
-      <GameStatus
-        isComplete={isComplete}
-        isGameOver={isGameOver}
-        isBoardHidden={isBoardHidden}
-        isHardMode={isHardMode}
-        getTimeString={getTimeString}
-        onReset={() => resetGame()}
-        onStartGame={() => {
-          setIsBoardHidden(false);
-          setStartTime(Date.now());
-        }}
-      />
-      <GameBoard
-        numbers={numbers}
-        isBoardHidden={isBoardHidden}
-        isGameOver={isGameOver}
-        wrongSquareIndex={wrongSquareIndex}
-        correctNumber={correctNumber}
-        onNumberClick={handleNumberClick}
-      />
+      >
+        <GameBoard
+          numbers={numbers}
+          isBoardHidden={isBoardHidden}
+          isGameOver={isGameOver}
+          wrongSquareIndex={wrongSquareIndex}
+          correctNumber={correctNumber}
+          onNumberClick={handleNumberClick}
+        />
+      </div>
     </div>
   );
 }
