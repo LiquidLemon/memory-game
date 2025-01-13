@@ -299,6 +299,13 @@ function GameBoard({
     const actualSize = Math.round(Math.sqrt(numbers.length));
     if (!actualSize || numbers.length !== actualSize * actualSize) return [];
 
+    // Calculate cell size based on viewport width
+    const padding = 32; // Page padding (16px * 2)
+    const spacing = 8; // Total spacing between cells (4px * 2)
+    const viewportWidth = Math.min(window.innerWidth - padding, 500);
+    const totalSpacing = spacing * (actualSize - 1); // Space between cells
+    const cellSize = Math.floor((viewportWidth - totalSpacing) / actualSize);
+
     for (let y = 0; y < actualSize; y++) {
       const row = [];
       for (let x = 0; x < actualSize; x++) {
@@ -308,8 +315,9 @@ function GameBoard({
           <td
             key={i}
             style={{
-              width: "50px",
-              height: "50px",
+              width: `${cellSize}px`,
+              height: `${cellSize}px`,
+              fontSize: cellSize < 40 ? "14px" : "16px", // Smaller font for smaller cells
               backgroundColor:
                 i === wrongSquareIndex
                   ? "#ffcdd2"
@@ -349,9 +357,11 @@ function GameBoard({
   };
 
   return (
-    <table style={{ borderCollapse: "separate", borderSpacing: "4px" }}>
-      <tbody>{generateRows()}</tbody>
-    </table>
+    <div style={{ overflowX: "auto", maxWidth: "100%" }}>
+      <table style={{ borderCollapse: "separate", borderSpacing: "4px" }}>
+        <tbody>{generateRows()}</tbody>
+      </table>
+    </div>
   );
 }
 
