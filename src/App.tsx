@@ -188,6 +188,19 @@ type GameStatusProps = {
   onStartGame: () => void;
 };
 
+// Common button style to be used in both places
+const buttonStyle = {
+  marginTop: "8px",
+  padding: "8px 16px",
+  fontSize: "16px",
+  borderRadius: "4px",
+  background: "#646cff",
+  color: "white",
+  border: "none",
+  cursor: "pointer",
+  transition: "background-color 0.2s ease",
+};
+
 function GameStatus({
   isComplete,
   isGameOver,
@@ -223,26 +236,16 @@ function GameStatus({
           <h1 style={{ margin: 0 }}>Congratulations!</h1>
           <p>You've completed the game!</p>
           <p>{getTimeString()}</p>
-          <button onClick={onReset}>Play Again</button>
+          <button onClick={onReset} style={buttonStyle}>
+            Play Again
+          </button>
         </>
       ) : isGameOver ? (
         <>
           <h1 style={{ margin: 0 }}>Game Over!</h1>
           <p>You clicked the wrong number!</p>
           <p>{getTimeString()}</p>
-          <button
-            onClick={onReset}
-            style={{
-              marginTop: "8px",
-              padding: "8px 16px",
-              fontSize: "16px",
-              borderRadius: "4px",
-              background: "#646cff",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={onReset} style={buttonStyle}>
             Try Again
           </button>
         </>
@@ -256,19 +259,7 @@ function GameStatus({
               ? "Numbers are randomly selected from a larger pool!"
               : "Start with 1 and count up!"}
           </p>
-          <button
-            onClick={onStartGame}
-            style={{
-              marginTop: "8px",
-              padding: "8px 16px",
-              fontSize: "16px",
-              borderRadius: "4px",
-              background: "#646cff",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={onStartGame} style={buttonStyle}>
             Start Game
           </button>
         </>
