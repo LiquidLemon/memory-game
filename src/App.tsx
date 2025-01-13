@@ -10,7 +10,7 @@ type GameSize = {
 const GAME_SIZES: GameSize[] = [
   { name: "5x5 (25)", size: 5, hardModePool: 50 },
   { name: "8x8 (64)", size: 8, hardModePool: 100 },
-  { name: "10x10 (100)", size: 10 },
+  { name: "10x10 (100)", size: 10, hardModePool: 128 },
 ];
 
 function shuffle<T>(array: T[]): T[] {
@@ -69,6 +69,14 @@ function GameControls({
   onBlindModeChange,
   onHardModeChange,
 }: GameControlsProps) {
+  const getGridLabel = (gameSize: GameSize) => {
+    const n = gameSize.size * gameSize.size;
+    if (isHardMode) {
+      return `${gameSize.size}×${gameSize.size} (${n} of ${gameSize.hardModePool})`;
+    }
+    return `${gameSize.size}×${gameSize.size} (${n})`;
+  };
+
   return (
     <div
       style={{
@@ -94,6 +102,7 @@ function GameControls({
           value={size}
           onChange={(e) => onSizeChange(Number(e.target.value))}
           style={{
+            width: "140px",
             padding: "8px 12px",
             borderRadius: "6px",
             border: "1px solid rgba(0, 0, 0, 0.2)",
@@ -106,7 +115,7 @@ function GameControls({
         >
           {GAME_SIZES.map((gameSize) => (
             <option key={gameSize.size} value={gameSize.size}>
-              {gameSize.name}
+              {getGridLabel(gameSize)}
             </option>
           ))}
         </select>
