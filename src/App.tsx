@@ -1,49 +1,73 @@
-import { useCallback, useState } from "react"
-import "./App.css"
+import { useCallback, useState } from "react";
+import "./App.css";
 
 type GameSize = {
   name: string;
   size: number;
+  hardModePool?: number;
 };
 
 const GAME_SIZES: GameSize[] = [
-  { name: "5x5 (25)", size: 5 },
-  { name: "8x8 (64)", size: 8 },
+  { name: "5x5 (25)", size: 5, hardModePool: 50 },
+  { name: "8x8 (64)", size: 8, hardModePool: 100 },
   { name: "10x10 (100)", size: 10 },
-]
+];
 
 function shuffle<T>(array: T[]): T[] {
-  const shuffled = [...array]
+  const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    const temp = shuffled[i]
-    shuffled[i] = shuffled[j]
-    shuffled[j] = temp
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = shuffled[i];
+    shuffled[i] = shuffled[j];
+    shuffled[j] = temp;
   }
-  return shuffled
+  return shuffled;
 }
 
-function createInitialArray(size: number): [number, boolean][] {
+function createInitialArray(
+  size: number,
+  isHardMode: boolean
+): [number, boolean][] {
+  const gameSize = GAME_SIZES.find((g) => g.size === size);
+  if (!gameSize) return [];
+
+  const maxNumber =
+    isHardMode && gameSize.hardModePool ? gameSize.hardModePool : size * size;
+
+  // Create array of all possible numbers
+  const allNumbers = Array.from({ length: maxNumber }, (_, i) => i + 1);
+
+  // If in hard mode, randomly select the required amount of numbers
+  const selectedNumbers =
+    isHardMode && gameSize.hardModePool
+      ? shuffle(allNumbers).slice(0, size * size)
+      : allNumbers.slice(0, size * size);
+
+  // Sort the numbers to ensure they're in ascending order
+  selectedNumbers.sort((a, b) => a - b);
+
+  // Shuffle the sorted numbers and pair with false for not selected
   return shuffle(
-    Array.from(
-      { length: size * size },
-      (_, i) => [i + 1, false] as [number, boolean]
-    )
-  )
+    selectedNumbers.map((num) => [num, false] as [number, boolean])
+  );
 }
 
 type GameControlsProps = {
   size: number;
   isBlindMode: boolean;
+  isHardMode: boolean;
   onSizeChange: (size: number) => void;
   onBlindModeChange: (isBlind: boolean) => void;
+  onHardModeChange: (isHard: boolean) => void;
 };
 
 function GameControls({
   size,
   isBlindMode,
+  isHardMode,
   onSizeChange,
   onBlindModeChange,
+  onHardModeChange,
 }: GameControlsProps) {
   return (
     <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
@@ -87,28 +111,43 @@ function GameControls({
           onChange={(e) => onBlindModeChange(e.target.checked)}
         />
       </div>
+
+      <div>
+        <label
+          htmlFor="hard-mode"
+          style={{ marginRight: "10px", fontWeight: "500" }}
+        >
+          Hard Mode:
+        </label>
+        <input
+          id="hard-mode"
+          type="checkbox"
+          checked={isHardMode}
+          onChange={(e) => onHardModeChange(e.target.checked)}
+        />
+      </div>
     </div>
-  )
+  );
 }
 
 type GameStatusProps = {
-  size: number;
-  nextNumber: number;
+  isComplete: boolean;
   isGameOver: boolean;
   isBoardHidden: boolean;
+  isHardMode: boolean;
   getTimeString: () => string;
   onReset: () => void;
   onStartGame: () => void;
 };
 
 function GameStatus({
-  size,
-  nextNumber,
+  isComplete,
   isGameOver,
   isBoardHidden,
   getTimeString,
   onReset,
   onStartGame,
+  isHardMode,
 }: GameStatusProps) {
   return (
     <div
@@ -121,7 +160,7 @@ function GameStatus({
         textAlign: "center",
       }}
     >
-      {nextNumber > size * size ? (
+      {isComplete ? (
         <>
           <h1 style={{ margin: 0 }}>Congratulations!</h1>
           <p>You've completed the game!</p>
@@ -137,7 +176,14 @@ function GameStatus({
         </>
       ) : isBoardHidden ? (
         <>
-          <p style={{ margin: 0, fontSize: "18px" }}>Ready to start?</p>
+          <p style={{ margin: 0, fontSize: "18px" }}>
+            Find and click numbers in ascending order
+          </p>
+          <p style={{ margin: "8px 0", fontSize: "16px" }}>
+            {isHardMode
+              ? "Numbers are randomly selected from a larger pool!"
+              : "Start with 1 and count up!"}
+          </p>
           <button
             onClick={onStartGame}
             style={{
@@ -153,15 +199,17 @@ function GameStatus({
       ) : (
         <>
           <p style={{ margin: 0, fontSize: "18px" }}>
-            Find and click numbers in order
+            Find and click numbers in ascending order
           </p>
           <p style={{ margin: "8px 0", fontSize: "16px" }}>
-            Start with 1 and count up!
+            {isHardMode
+              ? "Numbers are randomly selected from a larger pool!"
+              : "Start with 1 and count up!"}
           </p>
         </>
       )}
     </div>
-  )
+  );
 }
 
 type GameBoardProps = {
@@ -169,6 +217,7 @@ type GameBoardProps = {
   isBoardHidden: boolean;
   isGameOver: boolean;
   wrongSquareIndex: number | null;
+  correctNumber: number | null;
   onNumberClick: (index: number) => void;
 };
 
@@ -177,18 +226,19 @@ function GameBoard({
   isBoardHidden,
   isGameOver,
   wrongSquareIndex,
+  correctNumber,
   onNumberClick,
 }: GameBoardProps) {
   const generateRows = () => {
-    const rows = []
-    const actualSize = Math.round(Math.sqrt(numbers.length))
-    if (!actualSize || numbers.length !== actualSize * actualSize) return []
+    const rows = [];
+    const actualSize = Math.round(Math.sqrt(numbers.length));
+    if (!actualSize || numbers.length !== actualSize * actualSize) return [];
 
     for (let y = 0; y < actualSize; y++) {
-      const row = []
+      const row = [];
       for (let x = 0; x < actualSize; x++) {
-        const i = y * actualSize + x
-        const [number, isSelected] = numbers[i]
+        const i = y * actualSize + x;
+        const [number, isSelected] = numbers[i];
         row.push(
           <td
             key={i}
@@ -198,6 +248,8 @@ function GameBoard({
               backgroundColor:
                 i === wrongSquareIndex
                   ? "#ffcdd2"
+                  : number === correctNumber
+                  ? "#90caf9"
                   : isSelected
                   ? "#90EE90"
                   : "#f5f5f5",
@@ -214,92 +266,110 @@ function GameBoard({
               transition: "background-color 0.2s ease",
             }}
             onClick={() => {
-              if (isGameOver) return
-              onNumberClick(i)
+              if (isGameOver) return;
+              onNumberClick(i);
             }}
           >
             {!isBoardHidden && number}
           </td>
-        )
+        );
       }
       rows.push(
         <tr key={y} style={{ padding: "2px" }}>
           {row}
         </tr>
-      )
+      );
     }
-    return rows
-  }
+    return rows;
+  };
 
   return (
     <table style={{ borderCollapse: "separate", borderSpacing: "4px" }}>
       <tbody>{generateRows()}</tbody>
     </table>
-  )
+  );
 }
 
 function App() {
-  const [size, setSize] = useState<number>(8)
-  const [isBlindMode, setIsBlindMode] = useState(false)
-  const [isBoardHidden, setIsBoardHidden] = useState(false)
+  const [size, setSize] = useState<number>(8);
+  const [isBlindMode, setIsBlindMode] = useState(false);
+  const [isHardMode, setIsHardMode] = useState(false);
+  const [isBoardHidden, setIsBoardHidden] = useState(false);
   const [numbers, setNumbers] = useState<[number, boolean][]>(() =>
-    createInitialArray(size)
-  )
-  const [nextNumber, setNextNumber] = useState(1)
-  const [isGameOver, setIsGameOver] = useState(false)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [endTime, setEndTime] = useState<number | null>(null)
-  const [wrongSquareIndex, setWrongSquareIndex] = useState<number | null>(null)
+    createInitialArray(size, false)
+  );
+  const [nextNumber, setNextNumber] = useState(1);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [wrongSquareIndex, setWrongSquareIndex] = useState<number | null>(null);
+  const [correctNumber, setCorrectNumber] = useState<number | null>(null);
+  const [isComplete, setIsComplete] = useState(false);
 
   const resetGame = useCallback(
     (newSize?: number, shouldHideBoard?: boolean) => {
-      setNextNumber(1)
-      setIsGameOver(false)
-      setStartTime(null)
-      setEndTime(null)
-      setWrongSquareIndex(null)
-      setNumbers(createInitialArray(newSize ?? size))
-      setIsBoardHidden(shouldHideBoard ?? isBlindMode)
+      setIsComplete(false);
+      setIsGameOver(false);
+      setStartTime(null);
+      setEndTime(null);
+      setWrongSquareIndex(null);
+      setCorrectNumber(null);
+      setNumbers(createInitialArray(newSize ?? size, isHardMode));
+      setIsBoardHidden(shouldHideBoard ?? isBlindMode);
     },
-    [size, isBlindMode]
-  )
+    [size, isBlindMode, isHardMode]
+  );
 
   const handleNumberClick = useCallback(
     (index: number) => {
-      const [number, _selected] = numbers[index]
+      const [number, _selected] = numbers[index];
+
+      // Find the smallest unselected number
+      const nextExpectedNumber = numbers.reduce(
+        (smallest, [num, isSelected]) => {
+          if (!isSelected && (smallest === null || num < smallest)) {
+            return num;
+          }
+          return smallest;
+        },
+        null as number | null
+      );
 
       if (startTime === null && !isBlindMode) {
-        setStartTime(Date.now())
+        setStartTime(Date.now());
       }
 
-      if (number !== nextNumber) {
-        setIsGameOver(true)
-        setEndTime(Date.now())
-        setWrongSquareIndex(index)
-        return
+      if (number !== nextExpectedNumber) {
+        setIsGameOver(true);
+        setEndTime(Date.now());
+        setWrongSquareIndex(index);
+        setCorrectNumber(nextExpectedNumber);
+        return;
       }
 
-      const newNextNumber = nextNumber + 1
-      setNumbers(
-        numbers.map(([num, isSelected], i) => [
-          num,
-          i === index ? true : isSelected,
-        ])
-      )
-      setNextNumber(newNextNumber)
+      const newNumbers = numbers.map(([num, isSelected], i) => [
+        num,
+        i === index ? true : isSelected,
+      ]);
+      setNumbers(newNumbers as [number, boolean][]);
 
-      if (newNextNumber > size * size) {
-        setEndTime(Date.now())
+      // Check if this was the last number
+      const remainingUnselected = newNumbers.some(
+        ([_num, isSelected]) => !isSelected
+      );
+      if (!remainingUnselected) {
+        setIsComplete(true);
+        setEndTime(Date.now());
       }
     },
-    [numbers, nextNumber, startTime, isBlindMode, size]
-  )
+    [numbers, startTime, isBlindMode]
+  );
 
   const getTimeString = () => {
-    if (!startTime || !endTime) return ""
-    const seconds = ((endTime - startTime) / 1000).toFixed(1)
-    return `Time: ${seconds} seconds`
-  }
+    if (!startTime || !endTime) return "";
+    const seconds = ((endTime - startTime) / 1000).toFixed(1);
+    return `Time: ${seconds} seconds`;
+  };
 
   return (
     <div
@@ -314,25 +384,36 @@ function App() {
       <GameControls
         size={size}
         isBlindMode={isBlindMode}
+        isHardMode={isHardMode}
         onSizeChange={(newSize) => {
-          setSize(newSize)
-          resetGame(newSize)
+          setSize(newSize);
+          resetGame(newSize);
         }}
         onBlindModeChange={(newBlindMode) => {
-          setIsBlindMode(newBlindMode)
-          resetGame(undefined, newBlindMode)
+          setIsBlindMode(newBlindMode);
+          resetGame(undefined, newBlindMode);
+        }}
+        onHardModeChange={(newHardMode) => {
+          setIsHardMode(newHardMode);
+          setNumbers(createInitialArray(size, newHardMode));
+          setIsComplete(false);
+          setIsGameOver(false);
+          setStartTime(null);
+          setEndTime(null);
+          setWrongSquareIndex(null);
+          setCorrectNumber(null);
         }}
       />
       <GameStatus
-        size={size}
-        nextNumber={nextNumber}
+        isComplete={isComplete}
         isGameOver={isGameOver}
         isBoardHidden={isBoardHidden}
+        isHardMode={isHardMode}
         getTimeString={getTimeString}
         onReset={() => resetGame()}
         onStartGame={() => {
-          setIsBoardHidden(false)
-          setStartTime(Date.now())
+          setIsBoardHidden(false);
+          setStartTime(Date.now());
         }}
       />
       <GameBoard
@@ -340,10 +421,11 @@ function App() {
         isBoardHidden={isBoardHidden}
         isGameOver={isGameOver}
         wrongSquareIndex={wrongSquareIndex}
+        correctNumber={correctNumber}
         onNumberClick={handleNumberClick}
       />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
