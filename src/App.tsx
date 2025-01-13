@@ -206,7 +206,7 @@ function GameStatus({
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
-        padding: "20px",
+        padding: "16px",
         background: "rgba(255, 255, 255, 0.1)",
         borderRadius: "8px",
         backdropFilter: "blur(10px)",
@@ -214,6 +214,8 @@ function GameStatus({
         width: "100%",
         maxWidth: "500px",
         color: "#213547",
+        boxSizing: "border-box",
+        margin: "0 auto",
       }}
     >
       {isComplete ? (
@@ -308,11 +310,12 @@ function GameBoard({
     const actualSize = Math.round(Math.sqrt(numbers.length));
     if (!actualSize || numbers.length !== actualSize * actualSize) return [];
 
-    // Calculate cell size based on viewport width
+    // Update viewport width calculation
     const padding = 32; // Page padding (16px * 2)
     const spacing = 8; // Total spacing between cells (4px * 2)
-    const viewportWidth = Math.min(window.innerWidth - padding, 500);
-    const totalSpacing = spacing * (actualSize - 1); // Space between cells
+    const maxWidth = 500; // Maximum width of the game board
+    const viewportWidth = Math.min(window.innerWidth - padding, maxWidth);
+    const totalSpacing = spacing * (actualSize - 1);
     const cellSize = Math.floor((viewportWidth - totalSpacing) / actualSize);
 
     for (let y = 0; y < actualSize; y++) {
@@ -326,7 +329,7 @@ function GameBoard({
             style={{
               width: `${cellSize}px`,
               height: `${cellSize}px`,
-              fontSize: cellSize < 40 ? "14px" : "16px", // Smaller font for smaller cells
+              fontSize: cellSize < 40 ? "14px" : "16px",
               backgroundColor:
                 i === wrongSquareIndex
                   ? "#ffcdd2"
@@ -346,6 +349,9 @@ function GameBoard({
               fontWeight: "500",
               boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
               transition: "background-color 0.2s ease",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              userSelect: "none",
             }}
             onClick={() => {
               if (isGameOver) return;
@@ -366,8 +372,21 @@ function GameBoard({
   };
 
   return (
-    <div style={{ overflowX: "auto", maxWidth: "100%" }}>
-      <table style={{ borderCollapse: "separate", borderSpacing: "4px" }}>
+    <div
+      style={{
+        overflowX: "auto",
+        maxWidth: "100%",
+        padding: "0 8px", // Add some padding
+        boxSizing: "border-box", // Ensure padding is included in width
+      }}
+    >
+      <table
+        style={{
+          borderCollapse: "separate",
+          borderSpacing: "4px",
+          margin: "0 auto", // Center the table
+        }}
+      >
         <tbody>{generateRows()}</tbody>
       </table>
     </div>
