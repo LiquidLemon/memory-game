@@ -461,8 +461,16 @@ function App() {
 
   const getTimeString = () => {
     if (!startTime || !endTime) return "";
-    const seconds = ((endTime - startTime) / 1000).toFixed(1);
-    return `Time: ${seconds} seconds`;
+    const totalSeconds = Math.floor((endTime - startTime) / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    if (minutes === 0) {
+      return `Time: ${seconds} seconds`;
+    }
+    return `Time: ${minutes} minute${
+      minutes !== 1 ? "s" : ""
+    } ${seconds} second${seconds !== 1 ? "s" : ""}`;
   };
 
   return (
