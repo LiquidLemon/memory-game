@@ -70,11 +70,22 @@ function GameControls({
   onHardModeChange,
 }: GameControlsProps) {
   return (
-    <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "20px",
+        alignItems: "center",
+        padding: "16px",
+        background: "rgba(255, 255, 255, 0.1)",
+        borderRadius: "8px",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
       <div>
         <label
           htmlFor="size-select"
-          style={{ marginRight: "10px", fontWeight: "500" }}
+          style={{ marginRight: "10px", fontWeight: "500", color: "#213547" }}
         >
           Grid Size:
         </label>
@@ -83,10 +94,14 @@ function GameControls({
           value={size}
           onChange={(e) => onSizeChange(Number(e.target.value))}
           style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
+            padding: "8px 12px",
+            borderRadius: "6px",
+            border: "1px solid rgba(0, 0, 0, 0.2)",
             fontSize: "16px",
+            background: "rgba(255, 255, 255, 0.8)",
+            color: "#213547",
+            cursor: "pointer",
+            outline: "none",
           }}
         >
           {GAME_SIZES.map((gameSize) => (
@@ -97,10 +112,16 @@ function GameControls({
         </select>
       </div>
 
-      <div>
+      <div style={{ display: "flex", alignItems: "center" }}>
         <label
           htmlFor="blind-mode"
-          style={{ marginRight: "10px", fontWeight: "500" }}
+          style={{
+            marginRight: "10px",
+            fontWeight: "500",
+            color: "#213547",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
         >
           Blind Mode:
         </label>
@@ -109,13 +130,25 @@ function GameControls({
           type="checkbox"
           checked={isBlindMode}
           onChange={(e) => onBlindModeChange(e.target.checked)}
+          style={{
+            width: "18px",
+            height: "18px",
+            cursor: "pointer",
+            accentColor: "#646cff",
+          }}
         />
       </div>
 
-      <div>
+      <div style={{ display: "flex", alignItems: "center" }}>
         <label
           htmlFor="hard-mode"
-          style={{ marginRight: "10px", fontWeight: "500" }}
+          style={{
+            marginRight: "10px",
+            fontWeight: "500",
+            color: "#213547",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
         >
           Hard Mode:
         </label>
@@ -124,6 +157,12 @@ function GameControls({
           type="checkbox"
           checked={isHardMode}
           onChange={(e) => onHardModeChange(e.target.checked)}
+          style={{
+            width: "18px",
+            height: "18px",
+            cursor: "pointer",
+            accentColor: "#646cff",
+          }}
         />
       </div>
     </div>
@@ -152,12 +191,20 @@ function GameStatus({
   return (
     <div
       style={{
-        height: "160px",
+        minHeight: "160px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
+        padding: "20px",
+        background: "rgba(255, 255, 255, 0.1)",
+        borderRadius: "8px",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        width: "100%",
+        maxWidth: "500px",
+        color: "#213547",
       }}
     >
       {isComplete ? (
@@ -172,7 +219,21 @@ function GameStatus({
           <h1 style={{ margin: 0 }}>Game Over!</h1>
           <p>You clicked the wrong number!</p>
           <p>{getTimeString()}</p>
-          <button onClick={onReset}>Try Again</button>
+          <button
+            onClick={onReset}
+            style={{
+              marginTop: "8px",
+              padding: "8px 16px",
+              fontSize: "16px",
+              borderRadius: "4px",
+              background: "#646cff",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Try Again
+          </button>
         </>
       ) : isBoardHidden ? (
         <>
@@ -187,10 +248,14 @@ function GameStatus({
           <button
             onClick={onStartGame}
             style={{
-              marginTop: "16px",
+              marginTop: "8px",
               padding: "8px 16px",
               fontSize: "16px",
               borderRadius: "4px",
+              background: "#646cff",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
             }}
           >
             Start Game
@@ -374,13 +439,27 @@ function App() {
   return (
     <div
       style={{
-        minHeight: "400px",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: "20px",
+        padding: "2rem",
       }}
     >
+      <h1
+        style={{
+          fontSize: "2.5rem",
+          marginBottom: "1rem",
+          background: "linear-gradient(45deg, #646cff, #9089fc)",
+          backgroundClip: "text",
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+          textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        }}
+      >
+        Number Memory Game
+      </h1>
       <GameControls
         size={size}
         isBlindMode={isBlindMode}
